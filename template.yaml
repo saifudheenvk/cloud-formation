@@ -1,0 +1,119 @@
+AWSTemplateFormationVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: This is a test stack
+Parameters:
+  Env:
+    Type: String
+  BucketName:
+    Type: String
+
+#Properties that are common to all your serverless functions, APIs, and simple tables.
+Globals:
+  Api: 
+    OpenApiVersion: '3.0.0'
+  Function:
+         Timeout: 3
+         Runtime: nodejs14.x
+         MemorySize: 1024
+         Environment:
+             Variables:
+                 Product_Table: !Sub Products-${Env}
+
+Resources:
+  myApis:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub my-product-apis-${Env}
+      Description: My serverless test apis
+      StageName: !Sub ${Env}
+      DefinitionUri: build/swagger_json.json
+
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub Products-${Env}
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: productName
+          AttributeType: S
+      KeySchema:
+        AttributeName: id
+        KeyType: HASH
+      Tags:
+        - Key: "Env"
+          Value: !Sub ${Env}
+
+  DynamoDBRoleProducts:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Products-${Env}
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - 
+          PolicyName: "ProductsCrud01"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:UpdateItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:DeleteItem'
+                Resource:
+                  - !GetAtt ProductsTable.Arn
+  ProductsUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: index.handler
+      FunctionName: update-products-${Env}
+      Description: Update get delete update products
+      Role:
+        Fn::GetAtt:
+          - Outputs.DynamoDBRoleProductsArn
+      Events:
+        PutProduct:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: post
+            RestApiId:
+              Ref: myApis
+        GetProducts:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: get
+            RestApiId:
+              Ref: myApis
+        UpdateProduct:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: patch
+            RestApiId:
+              Ref: myApis
+        DelteProduct:
+          Type: Api
+          Properties:
+            Path: /products/{id}
+            Method: delete
+            RestApiId:
+              Ref: myApis
+
+Outputs:
+  DynamoDBRoleProductsArn:
+    value: !GetAtt DynamoDBRoleProducts.Arn
+    Description: DynamoDBRoleProducts Arn
