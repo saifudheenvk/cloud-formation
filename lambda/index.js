@@ -1,6 +1,6 @@
 "use strict";
 const AWS = require("aws-sdk");
-AWS.config.update({ region: "ap-south-1" });
+AWS.config.update({ region: "us-east-2" });
 var docClient = new AWS.DynamoDB.DocumentClient();
 
 const deleteProduct = async (event, context) => {

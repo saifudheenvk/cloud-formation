@@ -4,7 +4,7 @@ Description: This is a test stack
 Parameters:
   Env:
     Type: String
-  BucketName:
+  ApiDomain:
     Type: String
 
 #Properties that are common to all your serverless functions, APIs, and simple tables.
@@ -27,6 +27,13 @@ Resources:
       Description: My serverless test apis
       StageName: !Sub ${Env}
       DefinitionUri: build/swagger_json.json
+  mfaDomain:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      BasePath: !Sub ${Env}
+      DomainName: !Sub ${ApiDomain}
+      RestApiId: !Sub ${myApis}
+      Stage: !Ref myApis.Stage
 
   ProductsTable:
     Type: AWS::DynamoDB::Table
@@ -44,6 +51,7 @@ Resources:
         - Key: "Env"
           Value: !Sub ${Env}
 
+# this role created just for reference no connection with code
   DynamoDBRoleProducts:
     Type: AWS::IAM::Role
     Properties:
@@ -80,9 +88,20 @@ Resources:
       Handler: index.handler
       FunctionName: update-products-${Env}
       Description: Update get delete update products
-      Role:
-        Fn::GetAtt:
-          - Outputs.DynamoDBRoleProductsArn
+      Policies:
+        - 
+          PolicyName: "ProductsCrud01"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:UpdateItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:DeleteItem'
+                Resource:
+                  - !GetAtt ProductsTable.Arn
       Events:
         PutProduct:
           Type: Api
