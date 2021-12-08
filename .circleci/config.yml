@@ -7,6 +7,8 @@ orbs:
 
 jobs:
   say-hello:
+    docker:
+      - image: cimg/node:14.13.0
     macos:
       xcode: "13.1.0"
     steps:
