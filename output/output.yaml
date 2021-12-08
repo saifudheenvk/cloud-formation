@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  Env:
+    Type: String
+Globals:
+  Api:
+    OpenApiVersion: 3.0.0
+  Function:
+    Timeout: 60
+    Runtime: nodejs14.x
+    Environment:
+      Variables:
+        Product_Table:
+          Fn::Sub: Products-${Env}
+Resources:
+  myApis:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name:
+        Fn::Sub: my-product-apis-${Env}
+      Description: My serverless test apis
+      StageName:
+        Fn::Sub: ${Env}
+      DefinitionUri: s3://mycloud-saifu1/7c0b362a0e91dedc573f3673d22896c9
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: Products-${Env}
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      Tags:
+      - Key: Env
+        Value:
+          Fn::Sub: ${Env}
+  DynamoDBRoleProducts:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: Products-${Env}
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: ProductsCrud01
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:UpdateItem
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            Resource:
+            - Fn::GetAtt:
+              - ProductsTable
+              - Arn
+  ProductsUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://mycloud-saifu1/8e45e96217383924c6dfc640d60bbfcd
+      Handler: index.handler
+      FunctionName:
+        Fn::Sub: update-products-${Env}
+      Description: Update get delete update products
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:UpdateItem
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:DeleteItem
+          Resource:
+          - Fn::GetAtt:
+            - ProductsTable
+            - Arn
+      Events:
+        PutProduct:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: post
+            RestApiId:
+              Ref: myApis
+        GetProducts:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: get
+            RestApiId:
+              Ref: myApis
+        UpdateProduct:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: patch
+            RestApiId:
+              Ref: myApis
+        DelteProduct:
+          Type: Api
+          Properties:
+            Path: /products/{id}
+            Method: delete
+            RestApiId:
+              Ref: myApis
+Outputs:
+  DynamoDBRoleProductsArn:
+    Value:
+      Fn::GetAtt:
+      - DynamoDBRoleProducts
+      - Arn
+    Description: DynamoDBRoleProducts Arn

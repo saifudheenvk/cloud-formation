@@ -1,19 +1,20 @@
-AWSTemplateFormationVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: This is a test stack
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
 Parameters:
   Env:
     Type: String
+
 Globals:
   Api: 
     OpenApiVersion: '3.0.0'
   Function:
-    Timeout: 3
+    Timeout: 60
     Runtime: nodejs14.x
-    MemorySize: 1024
     Environment:
       Variables:
         Product_Table: !Sub Products-${Env}
+
 Resources:
   myApis:
     Type: AWS::Serverless::Api
@@ -22,8 +23,6 @@ Resources:
       Description: My serverless test apis
       StageName: !Sub ${Env}
       DefinitionUri: output/swagger_json.json
-
-
   ProductsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -31,11 +30,12 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
-        - AttributeName: productName
-          AttributeType: S
       KeySchema:
-        AttributeName: id
-        KeyType: HASH
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
       Tags:
         - Key: "Env"
           Value: !Sub ${Env}
@@ -51,7 +51,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-                - lamda.amazonaws.com
+                - lambda.amazonaws.com
             Action:
               - 'sts:AssumeRole'
       Policies:
@@ -115,8 +115,8 @@ Resources:
             Method: delete
             RestApiId:
               Ref: myApis
-
 Outputs:
   DynamoDBRoleProductsArn:
     Value: !GetAtt DynamoDBRoleProducts.Arn
     Description: DynamoDBRoleProducts Arn
+  

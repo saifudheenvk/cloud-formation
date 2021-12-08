@@ -8,9 +8,15 @@ sed -ie 's/SWENV/'${Env}'/g' output/swagger_json.json
 sed -ie 's/APIDOMAIN/'${DOMAIN}'/g' output/swagger_json.json
 sed -ie 's/SWREGION/'${SWREGION}'/g' output/swagger_json.json
 
+aws cloudformation package          \
+    --s3-bucket mycloud-saifu1             \
+    --template-file tem.yaml    \
+    --region $SWREGION               \
+    --output-template-file output/output.yaml 
+
 aws cloudformation deploy \
-  --template-file template.yaml \
+  --s3-bucket mycloud-saifu1       \
+  --template-file output/output.yaml \
   --stack-name WorkshopStack \
-  --capabilities CAPABILITY_IAM \
-  --parameter-overrides Env=$Env \
-  ApiDomain=$DOMAIN
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+  --parameter-overrides Env=$Env

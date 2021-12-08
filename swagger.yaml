@@ -29,37 +29,31 @@ paths:
         uri: >-
           arn:aws:apigateway:SWREGION:lambda:path/2015-03-31/functions/arn:aws:lambda:SWREGION:829121778091:function:update-products-SWENV/invocations
         passthroughBehavior: when_no_match
+        type: aws_proxy
         httpMethod: POST
         timeoutInMillis: 3000
       responses:
-        '204':
+        '200':
           description: User Identity Updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
-        headers:
-          Access-Control-Allow-Origin:
-            schema:
-              type: string
         '403':
           description: 400 response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestResponse'
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
   '/products':
     post:
-      operationId: getProducts
+      operationId: postProducts
       x-amazon-apigateway-request-validator: all
       x-amazon-apigateway-integration:
         uri: >-
           arn:aws:apigateway:SWREGION:lambda:path/2015-03-31/functions/arn:aws:lambda:SWREGION:829121778091:function:update-products-SWENV/invocations
         passthroughBehavior: when_no_match
+        type: aws_proxy
         httpMethod: POST
         timeoutInMillis: 3000
       requestBody:
@@ -76,29 +70,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
-        headers:
-          Access-Control-Allow-Origin:
-            schema:
-              type: string
         '403':
           description: 400 response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestResponse'
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
   '/products':
     patch:
-      operationId: getProducts
+      operationId: patchProducts
       x-amazon-apigateway-request-validator: all
       x-am`azon-apigateway-integration:
         uri: >-
           arn:aws:apigateway:SWREGION:lambda:path/2015-03-31/functions/arn:aws:lambda:SWREGION:829121778091:function:update-products-SWENV/invocations
         passthroughBehavior: when_no_match
         httpMethod: POST
+        type: aws_proxy
         timeoutInMillis: 3000
       requestBody:
         description: add new product
@@ -113,24 +100,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
-        headers:
-          Access-Control-Allow-Origin:
-            schema:
-              type: string
+                type: object
         '403':
           description: 400 response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestResponse'
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
   '/products/{id}':
     delete:
-      operationId: getProducts
+      operationId: deleteProducts
       x-amazon-apigateway-request-validator: all
       x-amazon-apigateway-integration:
         uri: >-
@@ -138,29 +117,22 @@ paths:
         passthroughBehavior: when_no_match
         httpMethod: POST
         timeoutInMillis: 3000
+        type: aws_proxy
         parameters:
           - $ref: '#/components/parameters/id'
       responses:
-        '201':
+        '204':
           description: User Identity Updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
-        headers:
-          Access-Control-Allow-Origin:
-            schema:
-              type: string
+                $ref: '#/components/schemas/UpdateResponse'
         '403':
           description: 400 response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestResponse'
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: string
 
 components:
   ProductResponse:
@@ -178,6 +150,9 @@ components:
         type: string
         description: id
         example: "1234"
+
+  UpdateResponse:
+    type: object
   
   BadRequestResponse:
     type: object

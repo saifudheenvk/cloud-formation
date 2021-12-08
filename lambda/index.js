@@ -58,7 +58,7 @@ const updateProducts = async (event, context) => {
   try {
     const data = await docClient.update(params).promise();
     responseBody = JSON.stringify(data);
-    statusCode = 204;
+    statusCode = 201;
   } catch (error) {
     console.log(error);
     responseBody = "Unable to update product data";
