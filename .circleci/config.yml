@@ -1,19 +1,18 @@
 version: 2.1
-
 jobs:
-  build:
+  adhoc:
     macos:
-      xcode: "13.1.0"
+      xcode: "11.3.1"
     environment:
-      FASTLANE_LANE: test
+      FL_OUTPUT_DIR: output
     steps:
       - checkout
-      - run:
-          name: fastlane
-          command: |
-            fastlane --version
-            bundle exec fastlane $FASTLANE_LANE
+      - run: echo 'chruby ruby-2.6' >> ~/.bash_profile
+      - run: bundle install
+      - run: curl -sL https://firebase.tools | bash
+      - run: bundle exec fastlane upload_firebase
+
 workflows:
-  say-hello-workflow:
+  adhoc-build:
     jobs:
-      - build
+      - adhoc
